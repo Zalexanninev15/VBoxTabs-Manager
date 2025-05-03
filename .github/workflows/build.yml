@@ -35,7 +35,7 @@ jobs:
 
       - name: Build EXE with PyInstaller
         run: |
-          pyinstaller --onefile --windowed --noconfirm --name VBoxTabs-Manager --hidden-import=PySide6.QtCore --hidden-import=PySide6.QtGui --hidden-import=PySide6.QtWidgets --hidden-import=PySide6.QtNetwork --hidden-import=PySide6.QtPrintSupport --hidden-import=PySide6.QtSvg --hidden-import=PySide6.QtOpenGL --hidden-import=win32api --hidden-import=win32con --hidden-import=win32gui --hidden-import=win32process --hidden-import=win32com VBoxTabs-Manager.py
+          pyinstaller --onefile --windowed --noconfirm --name VBoxTabs-Manager --hidden-import=PySide6.QtCore --hidden-import=PySide6.QtGui --hidden-import=PySide6.QtWidgets --hidden-import=PySide6.QtNetwork --hidden-import=PySide6.QtPrintSupport --hidden-import=PySide6.QtSvg --hidden-import=PySide6.QtOpenGL --hidden-import=win32api --hidden-import=win32con --hidden-import=win32gui --hidden-import=qdarkstyle --hidden-import=qt-themes --hidden-import=win32process --hidden-import=win32com VBoxTabs-Manager.py
 
       - name: Upload EXE artifact
         uses: actions/upload-artifact@v4

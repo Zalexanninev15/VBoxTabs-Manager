@@ -19,7 +19,7 @@
 
 ## Description
 
-**VBoxTabs Manager** is a Python application that allows you to gather all running VirtualBox virtual machines into a single window with tabs. All elements and functionality of VirtualBox windows are fully preserved.
+**VBoxTabs Manager** is a application that allows you to gather all running VirtualBox virtual machines into a single window with tabs. All elements and functionality of VirtualBox windows are fully preserved.
 
 ## Features
 

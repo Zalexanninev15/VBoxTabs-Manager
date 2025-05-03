@@ -23,19 +23,30 @@
 
 ## Features
 
-- Automatic detection of running VirtualBox virtual machines
-- Combining windows into tabs with the ability to switch between them
-- Tab renaming capability
-- Theme selection for the application
-- Detaching virtual machines back to separate windows
-- Automatic refresh of available virtual machines list
-- Context menu for each tab (right-click)
-- Drag & drop to reorder tabs or detach by dragging out
-- Full support for both English and Russian "[Running]" window titles
+-   **Automatic Detection**: Finds running VirtualBox virtual machines automatically.
+-   **Tabbed Interface**: Combines VM windows into tabs with easy switching.
+-   **Full VM Functionality**: Preserves the complete functionality of the original VirtualBox window within the tab.
+-   **Tab Management**:
+    -   Rename tabs for better identification.
+    -   Detach VMs back into separate windows using the toolbar or context menu.
+    -   Reorder tabs using drag and drop.
+    -   Forcefully close a VM window using the toolbar, context menu, or middle mouse click on the tab.
+-   **Toolbar Actions**: Quick access buttons for:
+    -   Refreshing the VM list.
+    -   Attaching all available VMs.
+    -   Detaching the current VM.
+    -   Force closing the current VM window.
+    -   Renaming the current tab.
+    -   Opening the main VirtualBox application.
+-   **Theme Selection**: Choose from various built-in Qt themes and themes provided by `qdarkstyle` and `qt-themes`.
+-   **Context Menu**: Right-click a tab for quick actions (rename, detach, close). Hold **Ctrl** while right-clicking to interact with an inactive tab's menu without switching to it.
+-   **Automatic Refresh**: Periodically checks for new or closed VM windows.
+-   **Multilingual Title Support**: Recognizes both English "[Running]" and Russian "[Работает]" in window titles.
+-   **Clean Exit**: Automatically detaches all VMs when the application is closed.
 
 ## Requirements
 
-- Windows 10 or Windows 11
+- OS: Windows 10/11
 - VirtualBox 7.0 or higher (may work on lower versions, but not tested)
 - No dependencies required for the standalone build (see below for running from source)
 
@@ -48,11 +59,17 @@
 
 ### 2. Running from Source
 
-1. Install Python 3.12+ (maybe, 3.8+).
+1. Install Python 3.13+ (maybe, 3.8+).
 2. Install dependencies:
 
-    ```batch
+    ```shell
     pip install -r requirements.txt
+    ```
+
+    [beta] If you want more themes available, you can additionally install *qdarkstyle* and/or *qt-themes*:
+
+    ```shell
+    pip install qdarkstyle qt-themes
     ```
 
 3. Download or clone this repository.
@@ -60,31 +77,25 @@
 5. Run the application:
 
     ```batch
-    python VBoxTabs-Manager.py
+    python ./VBoxTabs-Manager.py
     ```
 
 All detected running virtual machines will be added to the tabs.
 
-### Tab Actions
+### Actions
 
-- **Switch between virtual machines**: simply click on the corresponding tab
-- **Detach a virtual machine**: click on the X on the tab, use the detach button in the toolbar, or right-click the tab and select "Detach"
-- **Attach all available VMs**: use the attach button in the toolbar
-- **Refresh the list of virtual machines**: click the refresh button in the toolbar
-- **Rename a tab**: click the rename button in the toolbar or use the context menu
-- **Change application theme**: select a theme from the dropdown in the toolbar
-- **Context menu**: right-click any tab for quick actions (rename, detach, close). Opening the context menu while holding down the **Ctrl** key allows you to interact with the context menu of an inactive tab without switching to it.
+-   **Switch between VMs**: Click the corresponding tab.
+-   **Reorder Tabs**: Drag and drop tabs within the tab bar.
+-   **Detach a VM**: Click the "Detach current VM" button in the toolbar, or right-click the tab and select "Detach".
+-   **Attach all available VMs**: Click the "Attach all available VMs" button in the toolbar.
+-   **Refresh VM List**: Click the "Refresh VM list" button in the toolbar (also runs automatically).
+-   **Rename a Tab**: Select the tab, click the "Rename current tab" button in the toolbar, or right-click the tab and select "Rename".
+-   **Force Close VM Window**: Select the tab, click the "Close current VM window" button, middle-click the tab, or right-click the tab and select "Close window". *Warning: This terminates the VM process without graceful shutdown.*
+-   **Open VirtualBox Manager**: Click the "Open VirtualBox main application" button in the toolbar.
+-   **Change Theme**: Select a theme from the "Theme:" dropdown menu in the toolbar.
+-   **Context Menu**: Right-click any tab for quick actions (Rename, Detach, Close Window). Hold **Ctrl** while right-clicking to open the menu for an inactive tab without switching to it.
 
 When closing the application, all virtual machines are automatically detached back to separate windows.
-
-## How It Works
-
-The application uses the Win32 API (via pywin32) to:
-1. Find VirtualBox windows with running virtual machines
-2. Change window styles to embed them as child windows in Qt widgets
-3. Manage the size and position of windows within tabs
-
-Qt6 (PySide6) is used to create a tabbed user interface and manage the application.
 
 ## Troubleshooting
 
@@ -98,7 +109,7 @@ A GitHub Action is provided to automatically build a standalone Windows x64 exec
 
 To build manually, you can use [PyInstaller](https://pyinstaller.org/):
 
-```batch
+```shell
 pip install pyinstaller
 pyinstaller --onefile --windowed --noconfirm --name VBoxTabs-Manager --hidden-import=PySide6.QtCore --hidden-import=PySide6.QtGui --hidden-import=PySide6.QtWidgets --hidden-import=PySide6.QtNetwork --hidden-import=PySide6.QtPrintSupport --hidden-import=PySide6.QtSvg --hidden-import=PySide6.QtOpenGL --hidden-import=win32api --hidden-import=win32con --hidden-import=win32gui --hidden-import=win32process --hidden-import=win32com VBoxTabs-Manager.py
 ```

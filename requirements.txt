@@ -1,2 +1,2 @@
 PySide6==6.9.0
-pywin32==307 
+pywin32==307

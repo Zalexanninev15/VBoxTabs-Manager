@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pyinstaller PySide6 pywin32
+          pip install pyinstaller PySide6 pywin32 qdarkstyle qt-themes
 
       - name: Extract version from VBoxTabs-Manager.py
         id: get_version

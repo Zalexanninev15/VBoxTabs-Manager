@@ -1,0 +1,69 @@
+name: Build and Release EXE
+
+on:
+  push:
+    paths:
+      - 'VBoxTabs-Manager.py'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller PySide6 pywin32
+
+      - name: Extract version from VBoxTabs-Manager.py
+        id: get_version
+        run: |
+          $content = Get-Content VBoxTabs-Manager.py
+          $versionLine = $content | Select-String -Pattern 'version_label\s*=\s*QLabel\("Version ([0-9.]+)"\)'
+          if ($versionLine) {
+            $version = $versionLine.Matches[0].Groups[1].Value
+          } else {
+            $version = "0.0"
+          }
+          echo "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Build EXE with PyInstaller
+        run: |
+          pyinstaller --onefile --windowed --noconfirm --name VBoxTabs-Manager \
+            --hidden-import=PySide6.QtCore \
+            --hidden-import=PySide6.QtGui \
+            --hidden-import=PySide6.QtWidgets \
+            --hidden-import=PySide6.QtNetwork \
+            --hidden-import=PySide6.QtPrintSupport \
+            --hidden-import=PySide6.QtSvg \
+            --hidden-import=PySide6.QtOpenGL \
+            --hidden-import=win32api \
+            --hidden-import=win32con \
+            --hidden-import=win32gui \
+            --hidden-import=win32process \
+            --hidden-import=win32com \
+            VBoxTabs-Manager.py
+
+      - name: Upload EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VBoxTabs-Manager
+          path: dist/VBoxTabs-Manager.exe
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.get_version.outputs.version }}
+          name: Version ${{ steps.get_version.outputs.version }}
+          body: |
+            Automatic build for Version ${{ steps.get_version.outputs.version }}.
+            See [README](https://github.com/Zalexanninev15/VBoxTabs-Manager#readme) for usage instructions.
+          files: dist/VBoxTabs-Manager.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

@@ -4,13 +4,13 @@
 [![](https://img.shields.io/badge/PySide6-6.9.0-6F56AE?logo=qt)](https://pypi.org/project/PySide6/)
 [![](https://img.shields.io/badge/written_on-Python-%233776AB.svg?logo=python)](https://www.python.org/)
 [![](https://img.shields.io/github/v/release/Zalexanninev15/VBoxTabs-Manager)](https://github.com/Zalexanninev15/VBoxTabs-Manager/releases/latest)
+[![](https://img.shields.io/github/downloads/Zalexanninev15/VBoxTabs-Manager/total.svg)](https://github.com/Zalexanninev15/VBoxTabs-Manager/releases)
 [![](https://img.shields.io/github/last-commit/Zalexanninev15/VBoxTabs-Manager)](https://github.com/Zalexanninev15/VBoxTabs-Manager/commits/main)
 [![](https://img.shields.io/github/stars/Zalexanninev15/VBoxTabs-Manager.svg)](https://github.com/Zalexanninev15/VBoxTabs-Manager/stargazers)
 [![](https://img.shields.io/github/forks/Zalexanninev15/VBoxTabs-Manager.svg)](https://github.com/Zalexanninev15/VBoxTabs-Manager/network/members)
 [![](https://img.shields.io/github/issues/Zalexanninev15/VBoxTabs-Manager.svg)](https://github.com/Zalexanninev15/VBoxTabs-Manager/issues?q=is%3Aopen+is%3Aissue)
 [![](https://img.shields.io/github/issues-closed/Zalexanninev15/VBoxTabs-Manager.svg)](https://github.com/Zalexanninev15/VBoxTabs-Manager/issues?q=is%3Aissue+is%3Aclosed)
 [![](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![](https://img.shields.io/github/downloads/Zalexanninev15/VBoxTabs-Manager/total.svg)](https://github.com/Zalexanninev15/VBoxTabs-Manager/releases)
 [![](https://img.shields.io/badge/Donate-FFDD00.svg?logo=buymeacoffee&logoColor=black)](https://z15.neocities.org/donate)
 
 ## Screenshot

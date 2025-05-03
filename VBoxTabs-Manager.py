@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # VBoxTabs Manager
 # Copyright (c) 2025 Zalexanninev15
 # https://github.com/Zalexanninev15/VBoxTabs-Manager

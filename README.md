@@ -66,13 +66,18 @@
     pip install -r requirements.txt
     ```
 
-    [beta] If you want more themes available, you can additionally install *qdarkstyle* and/or *qt-themes*:
+    🌈 [beta] If you want more themes available, you can additionally install *qdarkstyle* and/or *qt-themes*:
 
     ```shell
     pip install qdarkstyle qt-themes
     ```
 
 3. Download or clone this repository.
+
+    ```shell
+    git clone https://github.com/Zalexanninev15/VBoxTabs-Manager
+    ```
+
 4. Start the required virtual machines in VirtualBox.
 5. Run the application:
 

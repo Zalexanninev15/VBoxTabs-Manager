@@ -73,7 +73,7 @@ All detected running virtual machines will be added to the tabs.
 - **Refresh the list of virtual machines**: click the refresh button in the toolbar
 - **Rename a tab**: click the rename button in the toolbar or use the context menu
 - **Change application theme**: select a theme from the dropdown in the toolbar
-- **Context menu**: right-click any tab for quick actions (rename, detach, close)
+- **Context menu**: right-click any tab for quick actions (rename, detach, close). Opening the context menu while holding down the **Ctrl** key allows you to interact with the context menu of an inactive tab without switching to it.
 
 When closing the application, all virtual machines are automatically detached back to separate windows.
 

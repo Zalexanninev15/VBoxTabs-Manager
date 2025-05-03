@@ -4,8 +4,7 @@
 #
 # Licensed under the MIT License. See LICENSE file in the project root for full license information.
 """
-VBoxTabs Manager - Combining VirtualBox windows into a single tabbed window
-For Windows 10/11 using Qt6 and Win32 API
+VBoxTabs Manager - Combining VirtualBox windows into a single tabbed window.
 """
 
 import sys
@@ -124,13 +123,11 @@ class WindowManager:
 
 class AboutDialog(QDialog):
     """About dialog window"""
-    
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("About VBoxTabs Manager")
-        self.setMinimumWidth(400)
-        self.setMinimumHeight(250)
-        
+        self.setFixedSize(400, 250)
+
         layout = QVBoxLayout(self)
         
         # Add about information
@@ -142,11 +139,11 @@ class AboutDialog(QDialog):
         title_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(title_label)
         
-        desc_label = QLabel("A tool for combining VirtualBox windows into a single tabbed window")
+        desc_label = QLabel("A tool for combining VirtualBox windows into a single tabbed window.")
         desc_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(desc_label)
         
-        version_label = QLabel("Version 1.0")
+        version_label = QLabel("Version 1.01")
         version_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(version_label)
         
@@ -154,7 +151,7 @@ class AboutDialog(QDialog):
         author_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(author_label)
 
-        github_label = QLabel('<a href="https://github.com/Zalexanninev15/VBoxTabs-Manager">GitHub Project</a>')
+        github_label = QLabel('<a href="https://github.com/Zalexanninev15/VBoxTabs-Manager">GitHub Repository</a>')
         github_label.setOpenExternalLinks(True)
         github_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(github_label)
@@ -179,7 +176,6 @@ class AboutDialog(QDialog):
         ok_button = QPushButton("OK")
         ok_button.clicked.connect(self.accept)
         layout.addWidget(ok_button)
-
 
 class VBoxTab(QWidget):
     """Tab widget for VirtualBox window"""
@@ -240,7 +236,7 @@ class VirtualBoxTabs(QMainWindow):
         
         self.setWindowTitle("VBoxTabs Manager")
         self.resize(1280, 800)
-        # Установим иконку окна (стандартная)
+        # Main icon
         style = QApplication.style()
         self.setWindowIcon(style.standardIcon(QStyle.SP_ComputerIcon))
         
@@ -382,7 +378,7 @@ class VirtualBoxTabs(QMainWindow):
                 tab = VBoxTab(window)
                 self.tabs[hwnd] = tab
                 self.tab_widget.addTab(tab, tab.title)
-                # attach только если не был detachd вручную
+                # Attach only if not manually detached
                 if not getattr(tab, "detached_manually", False):
                     tab.attach_window()
     
@@ -400,19 +396,18 @@ class VirtualBoxTabs(QMainWindow):
     
     def closeEvent(self, event):
         """Handles application window close event"""
-        # Всегда деаттачить все окна без диалога
+        # Always deattach all windows without a dialog box
         for hwnd, tab in list(self.tabs.items()):
             tab.detach_window()
         event.accept()
 
-    # --- Drag&Drop для attach окна VirtualBox ---
+    # --- Drag & Drop to attach VirtualBox window ---
     def dragEnterEvent(self, event):
-        # Примитивная проверка: разрешаем drop всегда (можно доработать)
+        # Allow Drag & Drop always
         event.acceptProposedAction()
 
     def dropEvent(self, event):
-        # Здесь можно реализовать attach окна по hwnd, если передавать hwnd через mimeData
-        # Для примера: просто обновим вкладки
+        # Here you can implement attachment of a window by hwnd if you pass hwnd through mimeData
         self.refresh_tabs()
         event.acceptProposedAction()
 
@@ -458,9 +453,9 @@ class VirtualBoxTabs(QMainWindow):
         elif action == close_action:
             self.detach_tab(index)
 
-    # --- Detach при перетаскивании вкладки за пределы ---
+    # --- Detach when dragging a tab beyond ---
     def mouseReleaseEvent(self, event):
-        # Проверяем, если мышь отпущена вне области вкладок, и есть перетаскиваемая вкладка
+        # Check if the mouse is released outside the tab area and there is a draggable tab
         if event.button() == Qt.LeftButton:
             tabBar = self.tab_widget.tabBar()
             global_pos = event.globalPosition().toPoint() if hasattr(event, "globalPosition") else event.globalPos()
@@ -468,7 +463,7 @@ class VirtualBoxTabs(QMainWindow):
             tabBar_global = tabBar.mapToGlobal(tabBar_rect.topLeft()), tabBar.mapToGlobal(tabBar_rect.bottomRight())
             if not (tabBar_global[0].x() <= global_pos.x() <= tabBar_global[1].x() and
                     tabBar_global[0].y() <= global_pos.y() <= tabBar_global[1].y()):
-                # Вкладка была перетащена за пределы tabBar
+                # The tab has been dragged outside the tab bar
                 index = self.tab_widget.currentIndex()
                 if index >= 0:
                     self.detach_tab(index)

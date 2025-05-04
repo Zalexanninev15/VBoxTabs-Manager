@@ -1,4 +1,4 @@
-# VBoxTabs Manager
+- [ ] Linux support.# VBoxTabs Manager
 
 [![](https://img.shields.io/badge/platform-Windows-informational)](https://github.com/Zalexanninev15/VBoxTabs-Manager)
 [![](https://img.shields.io/badge/PySide6-6.9.0-6F56AE?logo=qt)](https://pypi.org/project/PySide6/)
@@ -117,7 +117,7 @@ When closing the application, all virtual machines are automatically detached ba
 ## Troubleshooting
 
 - **Virtual machine is not detected**: make sure the virtual machine is running and has "[Running]" or "[Работает]" in the title.
-- **Problems displaying window content**: try resizing the main application window.
+- **Problems displaying window content**: try resizing the main application window.This often happens if the windows of virtual machines change themselves, which often happens when starting the system in a virtual machine and setting the resolution.
 
 ## Building EXE (with files)
 

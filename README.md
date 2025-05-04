@@ -1,4 +1,4 @@
-- [ ] Linux support.# VBoxTabs Manager
+# VBoxTabs Manager
 
 [![](https://img.shields.io/badge/platform-Windows-informational)](https://github.com/Zalexanninev15/VBoxTabs-Manager)
 [![](https://img.shields.io/badge/PySide6-6.9.0-6F56AE?logo=qt)](https://pypi.org/project/PySide6/)

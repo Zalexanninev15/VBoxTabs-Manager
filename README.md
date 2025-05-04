@@ -66,10 +66,10 @@
     pip install -r requirements.txt
     ```
 
-    🌈 [beta] If you want more themes available, you can additionally install *qdarkstyle* and/or *qt-themes*:
+    🌈 [test] If you want more themes available, you can additionally install *qt-themes*:
 
     ```shell
-    pip install qdarkstyle qt-themes
+    pip install qt-themes
     ```
 
 3. Download or clone this repository.
@@ -112,12 +112,7 @@ When closing the application, all virtual machines are automatically detached ba
 
 A GitHub Action is provided to automatically build a standalone Windows x64 executable (no dependencies required) on every commit that changes `VBoxTabs-Manager.py`. The resulting build is published as a release with the version taken from the application.
 
-To build manually, you can use [PyInstaller](https://pyinstaller.org/):
-
-```shell
-pip install pyinstaller
-pyinstaller --onefile --windowed --noconfirm --name VBoxTabs-Manager --hidden-import=PySide6.QtCore --hidden-import=PySide6.QtGui --hidden-import=PySide6.QtWidgets --hidden-import=PySide6.QtNetwork --hidden-import=PySide6.QtPrintSupport --hidden-import=PySide6.QtSvg --hidden-import=PySide6.QtOpenGL --hidden-import=win32api --hidden-import=win32con --hidden-import=win32gui --hidden-import=win32process --hidden-import=win32com VBoxTabs-Manager.py
-```
+Use the `build.cmd` script to create an executable file.
 
 ## License
 

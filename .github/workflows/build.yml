@@ -1,48 +1,59 @@
 name: Build and Release EXE
-
 on:
   push:
     paths:
       - 'VBoxTabs-Manager.py'
-
 jobs:
   build:
     runs-on: windows-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+      
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-
+      
       - name: Install dependencies
         run: |
-          pip install pyinstaller PySide6 pywin32 qdarkstyle qt-themes
-
+          pip install pyinstaller PySide6 pywin32 qdarkstyle
+      
       - name: Extract version from VBoxTabs-Manager.py
         id: get_version
         run: |
           $content = Get-Content VBoxTabs-Manager.py
-          $versionLine = $content | Select-String -Pattern 'version_label\s*=\s*QLabel\("Version ([0-9.]+)"\)'
+          $versionLine = $content | Select-String -Pattern 'version_label\s*=\s*QLabel\("Version ([0-9.]+[a-zA-Z0-9_-]*)"'
           if ($versionLine) {
             $version = $versionLine.Matches[0].Groups[1].Value
+            echo "Raw version detected: $version"
           } else {
             $version = "0.0"
+            echo "No version found, using default: $version"
           }
           echo "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-
-      - name: Build EXE with PyInstaller
+      
+      - name: Build with PyInstaller
         run: |
-          pyinstaller --onefile --windowed --noconfirm --name VBoxTabs-Manager --hidden-import=PySide6.QtCore --hidden-import=PySide6.QtGui --hidden-import=PySide6.QtWidgets --hidden-import=PySide6.QtNetwork --hidden-import=PySide6.QtPrintSupport --hidden-import=PySide6.QtSvg --hidden-import=PySide6.QtOpenGL --hidden-import=win32api --hidden-import=win32con --hidden-import=win32gui --hidden-import=qdarkstyle --hidden-import=qt-themes --hidden-import=win32process --hidden-import=win32com VBoxTabs-Manager.py
-
-      - name: Upload EXE artifact
+          pyinstaller --noconfirm --onedir --windowed --name "VBoxTabs Manager" --clean --log-level "ERROR" --optimize "2" --noupx --hide-console "hide-late" --hidden-import "PySide6" VBoxTabs-Manager.py
+      
+      - name: Create ZIP archive
+        run: |
+          cd dist
+          Compress-Archive -Path "VBoxTabs Manager" -DestinationPath "VBoxTabs-Manager-${{ steps.get_version.outputs.version }}.zip"
+      
+      - name: Upload directory artifact
         uses: actions/upload-artifact@v4
         with:
-          name: VBoxTabs-Manager
-          path: dist/VBoxTabs-Manager.exe
-
+          name: VBoxTabs-Manager-${{ steps.get_version.outputs.version }}
+          path: dist/VBoxTabs Manager/
+      
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VBoxTabs-Manager-${{ steps.get_version.outputs.version }}-ZIP
+          path: dist/VBoxTabs-Manager-${{ steps.get_version.outputs.version }}.zip
+      
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -51,6 +62,7 @@ jobs:
           body: |
             Automatic build for Version ${{ steps.get_version.outputs.version }}.
             See [README](https://github.com/Zalexanninev15/VBoxTabs-Manager#readme) for usage instructions.
-          files: dist/VBoxTabs-Manager.exe
+          files: |
+            dist/VBoxTabs-Manager-${{ steps.get_version.outputs.version }}.zip
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

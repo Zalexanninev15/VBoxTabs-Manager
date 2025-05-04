@@ -54,12 +54,13 @@
 
 - [ ] Linux support.
 - [ ] Settings and their saving (window detection time, selected theme, scale and others...)
-- [ ] Disable the automatic attach of windows to tabs (the function will be enabled by default, because all windows with Oracle VirtualBox are attached, even if there is this text in the title of the browser window, It is required to first implement 1 roadmap point). Also, the lack of this option currently breaks the logic of the window detach function.
+- [ ] Disable the automatic attach of windows to tabs (the function will be enabled by default, because all windows with Oracle VirtualBox are attached, even if there is this text in the title of the browser window, It is required to first implement 2 roadmap point). Also, the lack of this option currently breaks the logic of the window detach function.
 - [ ] Quickly force-close (yes, it is closing) all windows that work as tabs.
 - [ ] View some information about running virtual machines. The information will be collected directly from the VirtualBox console implementation, most likely it will be.
 - [ ] Support for multiple windows in one tab with different layout.
 - [ ] Viewing a preview of the selected window when hovering over the tab.
 - [ ] If possible, improve the method of building an executable file for Windows. It's not really important, but it would be great.
+- [ ] If there are problems, fix the display on screens with high resolution and a scale above 100%.
 
 ## Installation and Usage
 

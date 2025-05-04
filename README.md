@@ -47,15 +47,26 @@
 ## Requirements
 
 - OS: Windows 10/11
-- VirtualBox 7.0 or higher (may work on lower versions, but not tested)
+- VirtualBox 7.0 or higher (It also works with earlier versions 5 and 6)
 - No dependencies required for the standalone build (see below for running from source)
+
+## Roadmap (I will be very glad of your help)
+
+- [ ] Linux support.
+- [ ] Settings and their saving (window detection time, selected theme, scale and others...)
+- [ ] Disable the automatic attach of windows to tabs (the function will be enabled by default, because all windows with Oracle VirtualBox are attached, even if there is this text in the title of the browser window, It is required to first implement 1 roadmap point). Also, the lack of this option currently breaks the logic of the window detach function.
+- [ ] Quickly force-close (yes, it is closing) all windows that work as tabs.
+- [ ] View some information about running virtual machines. The information will be collected directly from the VirtualBox console implementation, most likely it will be.
+- [ ] Support for multiple windows in one tab with different layout.
+- [ ] Viewing a preview of the selected window when hovering over the tab.
+- [ ] If possible, improve the method of building an executable file for Windows. It's not really important, but it would be great.
 
 ## Installation and Usage
 
 ### 1. Using the Release (Recommended)
 
-- Download the latest ready-to-use EXE from the [releases page](https://github.com/Zalexanninev15/VBoxTabs-Manager/releases/latest).
-- Run `VBoxTabsManager.exe` — **no installation or dependencies required**.
+- Download the latest ready-to-use EXE in archive (because the dependency files are already archived) from the [releases page](https://github.com/Zalexanninev15/VBoxTabs-Manager/releases/latest).
+- Run `VBoxTabsManager.exe` — **no installation and no dependencies are required in the system**.
 
 ### 2. Running from Source
 
@@ -104,15 +115,14 @@ When closing the application, all virtual machines are automatically detached ba
 
 ## Troubleshooting
 
-- **Virtual machine is not detected**: make sure the virtual machine is running and has "[Running]" or "[Работает]" in the title
-- **Problems displaying window content**: try resizing the main application window
-- **Problems with detaching windows**: restart the application and try again
+- **Virtual machine is not detected**: make sure the virtual machine is running and has "[Running]" or "[Работает]" in the title.
+- **Problems displaying window content**: try resizing the main application window.
 
-## Building a Standalone EXE
+## Building EXE (with files)
 
-A GitHub Action is provided to automatically build a standalone Windows x64 executable (no dependencies required) on every commit that changes `VBoxTabs-Manager.py`. The resulting build is published as a release with the version taken from the application.
+A GitHub Action is provided to automatically build a Windows x64 executable file with other files (no dependencies required) on every commit that changes `VBoxTabs-Manager.py`. The resulting build is published as a release with the version taken from the application.
 
-Use the `build.cmd` script to create an executable file.
+Use the `build.cmd` script to create executable file with other files.
 
 ## License
 

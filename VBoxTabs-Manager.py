@@ -188,7 +188,7 @@ class AboutDialog(QDialog):
         desc_label.setAlignment(Qt.AlignCenter)
         content_layout.addWidget(desc_label)
 
-        version_label = QLabel("Version 1.1")
+        version_label = QLabel("Version 1.1.1")
         version_label.setAlignment(Qt.AlignCenter)
         content_layout.addWidget(version_label)
 

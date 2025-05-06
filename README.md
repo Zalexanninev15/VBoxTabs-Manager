@@ -55,6 +55,7 @@
 - [ ] Linux support.
 - [ ] View some information about running virtual machines. The information will be collected directly from the VirtualBox console implementation, most likely it will be.
 - [ ] Support for multiple windows in one tab with different layout.
+- [ ] A tool for selecting any window (not even related to VirtualBox, any at all) and adding it as a tab.
 - [ ] Viewing a preview of the selected window when hovering over the tab.
 - [ ] Quickly deattach windows and attach with a simple drag and drop. I don't know how to implement it correctly yet, as there may be problems of accidental attachment and deattachment.
 

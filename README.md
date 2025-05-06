@@ -19,7 +19,7 @@
 
 ## Description
 
-**VBoxTabs Manager** is a application that allows you to gather all running VirtualBox virtual machines into a single window with tabs. All elements and functionality of VirtualBox windows are fully preserved.
+**VBoxTabs Manager** is an application that allows you to collect all running VirtualBox virtual machines into one tabbed window (window grouping). All elements and functionality of VirtualBox windows are fully preserved.
 
 ## Features
 
@@ -36,11 +36,11 @@
     -   Attaching all available VMs.
     -   Detaching the current VM.
     -   Force closing the current VM window.
+    -   Force closing all available VMs.
     -   Renaming the current tab.
     -   Opening the main VirtualBox application.
--   **Theme Selection**: Choose from various built-in Qt themes and themes provided by `qdarkstyle` and `qt-themes`.
--   **Context Menu**: Right-click a tab for quick actions (rename, detach, close). Hold **Ctrl** while right-clicking to interact with an inactive tab's menu without switching to it.
--   **Automatic Refresh**: Periodically checks for new or closed VM windows.
+-   **Settings**: The program can be conveniently customized with the help of the settings window.
+-   **Context Menu**: Right-click a tab for quick actions (rename, detach, close).
 -   **Multilingual Title Support**: Recognizes both English "[Running]" and Russian "[Работает]" in window titles.
 -   **Clean Exit**: Automatically detaches all VMs when the application is closed.
 
@@ -53,14 +53,10 @@
 ## Roadmap (I will be very glad of your help)
 
 - [ ] Linux support.
-- [ ] Settings and their saving (window detection time, selected theme, scale and others...)
-- [ ] Disable the automatic attach of windows to tabs (the function will be enabled by default, because all windows with Oracle VirtualBox are attached, even if there is this text in the title of the browser window, It is required to first implement 2 roadmap point). Also, the lack of this option currently breaks the logic of the window detach function.
-- [ ] Quickly force-close (yes, it is closing) all windows that work as tabs.
 - [ ] View some information about running virtual machines. The information will be collected directly from the VirtualBox console implementation, most likely it will be.
 - [ ] Support for multiple windows in one tab with different layout.
 - [ ] Viewing a preview of the selected window when hovering over the tab.
-- [ ] If possible, improve the method of building an executable file for Windows. It's not really important, but it would be great.
-- [ ] If there are problems, fix the display on screens with high resolution and a scale above 100%.
+- [ ] Quickly deattach windows and attach with a simple drag and drop. I don't know how to implement it correctly yet, as there may be problems of accidental attachment and deattachment.
 
 ## Installation and Usage
 
@@ -99,25 +95,22 @@
 
 All detected running virtual machines will be added to the tabs.
 
-### Actions
+### Interesting stuff
 
--   **Switch between VMs**: Click the corresponding tab.
--   **Reorder Tabs**: Drag and drop tabs within the tab bar.
+-   **Switch between VMs**: Click the corresponding tab. You can move and rename the tabs however you like.
 -   **Detach a VM**: Click the "Detach current VM" button in the toolbar, or right-click the tab and select "Detach".
--   **Attach all available VMs**: Click the "Attach all available VMs" button in the toolbar.
--   **Refresh VM List**: Click the "Refresh VM list" button in the toolbar (also runs automatically).
--   **Rename a Tab**: Select the tab, click the "Rename current tab" button in the toolbar, or right-click the tab and select "Rename".
 -   **Force Close VM Window**: Select the tab, click the "Close current VM window" button, middle-click the tab, or right-click the tab and select "Close window". *Warning: This terminates the VM process without graceful shutdown.*
--   **Open VirtualBox Manager**: Click the "Open VirtualBox main application" button in the toolbar.
--   **Change Theme**: Select a theme from the "Theme:" dropdown menu in the toolbar.
+-   **Force Close all available VMs** with process `VBoxSVC`, but not with service.
+-   **Open VirtualBox Manager**: Click the "Open VirtualBox main application" button in the toolbar. The path to the executable file is specified in the settings, but the default path is set to the default path from the VirtualBox installer.
 -   **Context Menu**: Right-click any tab for quick actions (Rename, Detach, Close Window). Hold **Ctrl** while right-clicking to open the menu for an inactive tab without switching to it.
-
-When closing the application, all virtual machines are automatically detached back to separate windows.
+-  **Automatic Refresh**: Periodically checks for new or closed VM windows. This parameter is adjustable in the settings.
+-  **Themes**: You can change the design themes in the settings.
 
 ## Troubleshooting
 
 - **Virtual machine is not detected**: make sure the virtual machine is running and has "[Running]" or "[Работает]" in the title.
-- **Problems displaying window content**: try resizing the main application window.This often happens if the windows of virtual machines change themselves, which often happens when starting the system in a virtual machine and setting the resolution.
+- **Problems displaying window content**: try resizing the main application window.
+This often happens if the windows of virtual machines change themselves, which often happens when starting the system in a virtual machine and setting the resolution.
 
 ## Building EXE (with files)
 

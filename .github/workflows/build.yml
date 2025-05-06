@@ -17,7 +17,9 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install pyinstaller PySide6 pywin32 qdarkstyle
+          pip install -r requirements.txt
+          pip install nuitka
+          pip install zstandard  # Required for Nuitka compression
       
       - name: Extract version from VBoxTabs-Manager.py
         id: get_version
@@ -33,27 +35,34 @@ jobs:
           }
           echo "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
       
-      - name: Build with PyInstaller
+      - name: Build with Nuitka
         run: |
-          pyinstaller --noconfirm --onedir --windowed --name "VBoxTabs Manager" --clean --log-level "ERROR" --optimize "2" --noupx --hide-console "hide-late" --hidden-import "PySide6" VBoxTabs-Manager.py
+          nuitka --assume-yes-for-downloads --standalone --follow-imports --enable-plugin=pyside6 --include-package=win32gui --include-package=win32process --include-package=win32con --include-package=win32api --include-package=qdarkstyle --static-libpython=no --company-name="Zalexanninev15" --product-name="VBoxTabs Manager" --file-version="${{ steps.get_version.outputs.version }}" --lto=yes --show-memory --show-progress --nofollow-import-to=tkinter --nofollow-import-to=PIL --nofollow-import-to=numpy --jobs=8 --windows-console-mode=disable --remove-output -o "VBoxTabs Manager.exe" VBoxTabs-Manager.py
       
       - name: Create ZIP archive
         run: |
-          cd dist
-          Compress-Archive -Path "VBoxTabs Manager" -DestinationPath "VBoxTabs-Manager-${{ steps.get_version.outputs.version }}.zip"
+          Rename-Item -Path "VBoxTabs Manager.dist" -NewName "VBoxTabs Manager"
+          Compress-Archive -Path "VBoxTabs Manager" -DestinationPath "VBoxTabs-Manager.zip"
       
       - name: Upload directory artifact
         uses: actions/upload-artifact@v4
         with:
-          name: VBoxTabs-Manager-${{ steps.get_version.outputs.version }}
-          path: dist/VBoxTabs Manager/
+          name: VBoxTabs-Manager
+          path: VBoxTabs Manager/
       
       - name: Upload ZIP artifact
         uses: actions/upload-artifact@v4
         with:
-          name: VBoxTabs-Manager-${{ steps.get_version.outputs.version }}-ZIP
-          path: dist/VBoxTabs-Manager-${{ steps.get_version.outputs.version }}.zip
+          name: VBoxTabs-Manager-ZIP
+          path: VBoxTabs-Manager.zip
       
+      - name: Get commit message
+        id: get_commit_message
+        run: |
+          $commitMessage = git log -1 --pretty=%B
+          $commitMessage = $commitMessage -replace "`n","\n" -replace "`r",""
+          echo "message=$commitMessage" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -61,8 +70,12 @@ jobs:
           name: Version ${{ steps.get_version.outputs.version }}
           body: |
             Automatic build for Version ${{ steps.get_version.outputs.version }}.
+            
+            ## Changes
+            ${{ steps.get_commit_message.outputs.message }}
+            
             See [README](https://github.com/Zalexanninev15/VBoxTabs-Manager#readme) for usage instructions.
           files: |
-            dist/VBoxTabs-Manager-${{ steps.get_version.outputs.version }}.zip
+            VBoxTabs-Manager.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -53,7 +53,6 @@ WS_SYSMENU = 0x00080000
 
 VB_MANAGER = False
 
-
 class WindowFinder:
     """Class for finding VirtualBox windows"""
 

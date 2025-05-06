@@ -41,7 +41,7 @@ jobs:
       
       - name: Create ZIP archive
         run: |
-          Rename-Item -Path "VBoxTabs Manager.dist" -NewName "VBoxTabs Manager"
+          Rename-Item -Path "VBoxTabs-Manager.dist" -NewName "VBoxTabs Manager"
           Compress-Archive -Path "VBoxTabs Manager" -DestinationPath "VBoxTabs-Manager.zip"
       
       - name: Upload directory artifact

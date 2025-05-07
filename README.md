@@ -112,6 +112,7 @@ All detected running virtual machines will be added to the tabs.
 - **Virtual machine is not detected**: make sure the virtual machine is running and has "[Running]" or "[Работает]" in the title.
 - **Problems displaying window content**: try resizing the main application window.
 This often happens if the windows of virtual machines change themselves, which often happens when starting the system in a virtual machine and setting the resolution.
+- **The contents of the tabs start to lag**: try increasing the delay before searching for windows or disabling the auto-attach function. You can temporarily deattach the window, and then return it back.
 
 ## Building EXE (with files)
 

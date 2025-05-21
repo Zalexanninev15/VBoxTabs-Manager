@@ -59,6 +59,7 @@
 - [X] Hyper-V support (already implemented in another test build)
 - [ ] Viewing a preview of the selected window when hovering over the tab.
 - [ ] Quickly deattach windows and attach with a simple drag and drop. I don't know how to implement it correctly yet, as there may be problems of accidental attachment and deattachment.
+- [ ] Using not just tabs for windows, but tabs for virtual machines directly. That is, the controls of the virtual machine will be in the manager itself, and not in the VirtualBox window.
 
 ## Installation and Usage
 

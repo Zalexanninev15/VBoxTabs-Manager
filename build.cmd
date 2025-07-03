@@ -1,4 +1,0 @@
-@echo off
-pip install -r requirements.txt
-pip install nuitka
-nuitka --assume-yes-for-downloads --standalone --follow-imports --enable-plugin=pyside6 --enable-plugin=pyside6 --include-package=win32gui --include-package=win32process --include-package=win32con --include-package=win32api --include-package=qdarkstyle --static-libpython=no --company-name="Zalexanninev15" --product-name="VBoxTabs Manager" --file-version="1.3.0" --lto=yes --show-memory --show-progress --nofollow-import-to=tkinter --nofollow-import-to=PIL --nofollow-import-to=numpy --jobs=8 --nofollow-import-to=tkinter --windows-console-mode=disable --nofollow-import-to=PIL --remove-output -o VBoxTabs-Manager.exe VBoxTabs-Manager.py

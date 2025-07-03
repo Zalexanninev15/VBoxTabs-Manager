@@ -118,7 +118,7 @@ This often happens if the windows of virtual machines change themselves, which o
 
 A GitHub Action is provided to automatically build a Windows x64 executable file with other files (no dependencies required) on every commit that changes `VBoxTabs-Manager.py`. The resulting build is published as a release with the version taken from the application.
 
-Use the `build.cmd` script to create executable file with other files.
+Use the `build.py` or `simple_build.cmd` script to create executable file with other files.
 
 ## License
 

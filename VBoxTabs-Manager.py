@@ -24,7 +24,28 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
 from PySide6.QtCore import Qt, QTimer, Signal, QObject, QSize, QPoint, QSettings
 from PySide6.QtGui import QFont, QAction, QMouseEvent, QIcon
 
-# QDarkStyle (optional)
+# Import for Windows registry access (for theme detection)
+try:
+    import winreg
+    WINREG_AVAILABLE = True
+except ImportError:
+    WINREG_AVAILABLE = False
+
+# Helper function to detect Windows light/dark theme
+def is_windows_light_theme():
+    """Checks if Windows is set to use a light theme for apps."""
+    if not WINREG_AVAILABLE:
+        return False
+    try:
+        key_path = r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path)
+        value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
+        winreg.CloseKey(key)
+        return value == 1
+    except (FileNotFoundError, OSError):
+        return False
+
+# QDarkStyle
 try:
     import qdarkstyle
     QDARKSTYLE_AVAILABLE = True
@@ -87,7 +108,7 @@ class WindowFinder:
                     'height': height
                 })
 
-            elif window_title and ("Oracle VirtualBox " in window_title or "Oracle VirtualBox " in window_title):
+            elif window_title and "Oracle VirtualBox " in window_title:
                 # Get window size
                 rect = win32gui.GetWindowRect(hwnd)
                 width = rect[2] - rect[0]
@@ -158,13 +179,11 @@ class WindowManager:
 
 class SettingsDialog(QDialog):
     """Settings dialog window"""
-
     def __init__(self, settings, parent=None):
         super().__init__(parent)
         self.settings = settings
         self.setWindowTitle("Settings")
         self.setMinimumWidth(500)
-        # Set proper popup dialog flags - make it modal and non-resizable
         self.setWindowFlags(Qt.Dialog | Qt.MSWindowsFixedSizeDialogHint |
                             Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
 
@@ -172,110 +191,76 @@ class SettingsDialog(QDialog):
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(15)
 
-        # General settings group
         general_group = QGroupBox("General Settings")
         general_layout = QGridLayout(general_group)
         general_layout.setColumnStretch(1, 1)
-
-        # Auto-attach windows option
-        self.auto_attach_checkbox = QCheckBox(
-            "Automatically attach VirtualBox windows")
-        self.auto_attach_checkbox.setChecked(
-            self.settings.get("auto_attach", True))
+        self.auto_attach_checkbox = QCheckBox("Automatically attach VirtualBox windows")
+        self.auto_attach_checkbox.setChecked(self.settings.get("auto_attach", True))
         general_layout.addWidget(self.auto_attach_checkbox, 0, 0, 1, 2)
-
-        # Refresh interval
-        general_layout.addWidget(
-            QLabel("Window detection interval (seconds):"), 1, 0)
+        general_layout.addWidget(QLabel("Window detection interval (seconds):"), 1, 0)
         self.refresh_interval_spinbox = QSpinBox()
         self.refresh_interval_spinbox.setRange(1, 60)
-        self.refresh_interval_spinbox.setValue(
-            self.settings.get("refresh_interval", 5))
+        self.refresh_interval_spinbox.setValue(self.settings.get("refresh_interval", 5))
         general_layout.addWidget(self.refresh_interval_spinbox, 1, 1)
-
-        # VirtualBox path
         general_layout.addWidget(QLabel("VirtualBox executable path:"), 2, 0)
         vbox_path_layout = QHBoxLayout()
-        self.vbox_path_edit = QLineEdit(self.settings.get(
-            "vbox_path", r"C:\Program Files\Oracle\VirtualBox\VirtualBox.exe"))
+        self.vbox_path_edit = QLineEdit(self.settings.get("vbox_path", r"C:\Program Files\Oracle\VirtualBox\VirtualBox.exe"))
         vbox_path_layout.addWidget(self.vbox_path_edit)
         self.browse_button = QPushButton("Browse...")
         self.browse_button.clicked.connect(self.browse_vbox_path)
         vbox_path_layout.addWidget(self.browse_button)
         general_layout.addLayout(vbox_path_layout, 2, 1)
-
         main_layout.addWidget(general_group)
 
-        # Display settings group
         display_group = QGroupBox("Display Settings")
         display_layout = QGridLayout(display_group)
         display_layout.setColumnStretch(1, 1)
-
-        # Theme selection
         display_layout.addWidget(QLabel("Theme:"), 0, 0)
         self.theme_combo = QComboBox()
-
-        # Add available themes
-        theme_names = ["Dark", "Light", "Classic", "Fusion"]
-        if QDARKSTYLE_AVAILABLE:
-            theme_names.append("QDark")
+        theme_names = []
+        if not is_windows_light_theme():
+            theme_names.append("Dark")
+        theme_names.extend(["Light", "Classic", "Fusion"])
+        if QDARKSTYLE_AVAILABLE: theme_names.append("QDark")
         if QT_THEMES_AVAILABLE:
             theme_names.extend(["Atom One", "Blender", "Catppuccin Frappe", "Catppuccin Latte",
                                 "Catppuccin Macchiato", "Catppuccin Mocha", "Dracula",
                                 "GitHub Dark", "GitHub Light", "Modern Dark", "Modern Light",
                                 "Monokai", "Nord", "One Dark Two"])
-
         self.theme_combo.addItems(theme_names)
         current_theme = self.settings.get("theme", "Fusion")
-        if current_theme in theme_names:
-            self.theme_combo.setCurrentText(current_theme)
+        if current_theme in theme_names: self.theme_combo.setCurrentText(current_theme)
+        else: self.theme_combo.setCurrentText("Fusion" if "Fusion" in theme_names else (theme_names[0] if theme_names else ""))
         display_layout.addWidget(self.theme_combo, 0, 1)
-
-        # DPI scaling
         display_layout.addWidget(QLabel("DPI Scaling:"), 1, 0)
         self.dpi_scaling_combo = QComboBox()
-        self.dpi_scaling_combo.addItems(
-            ["Auto", "100%", "125%", "150%", "175%", "200%"])
-        current_scaling = self.settings.get("dpi_scaling", "Auto")
-        self.dpi_scaling_combo.setCurrentText(current_scaling)
+        self.dpi_scaling_combo.addItems(["Auto", "100%", "125%", "150%", "175%", "200%"])
+        self.dpi_scaling_combo.setCurrentText(self.settings.get("dpi_scaling", "Auto"))
         display_layout.addWidget(self.dpi_scaling_combo, 1, 1)
-
         main_layout.addWidget(display_group)
 
-        # Buttons
         button_layout = QHBoxLayout()
         button_layout.addStretch(1)
-
         self.cancel_button = QPushButton("Cancel")
         self.cancel_button.clicked.connect(self.reject)
         button_layout.addWidget(self.cancel_button)
-
         self.save_button = QPushButton("Save")
         self.save_button.clicked.connect(self.accept)
         button_layout.addWidget(self.save_button)
-
         main_layout.addLayout(button_layout)
 
     def browse_vbox_path(self):
-        """Opens file dialog to select VirtualBox executable"""
-        file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Select VirtualBox Executable",
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select VirtualBox Executable",
             os.path.dirname(self.vbox_path_edit.text()),
-            "VirtualBox Executable (VirtualBox.exe);;All Executable Files (*.exe)"
-        )
-        if file_path:
-            self.vbox_path_edit.setText(file_path)
+            "VirtualBox Executable (VirtualBox.exe);;All Executable Files (*.exe)")
+        if file_path: self.vbox_path_edit.setText(file_path)
 
     def get_settings(self):
-        """Returns the settings from the dialog"""
-        return {
-            "auto_attach": self.auto_attach_checkbox.isChecked(),
-            "refresh_interval": self.refresh_interval_spinbox.value(),
-            "vbox_path": self.vbox_path_edit.text(),
-            "theme": self.theme_combo.currentText(),
-            "dpi_scaling": self.dpi_scaling_combo.currentText()
-        }
+        return {"auto_attach": self.auto_attach_checkbox.isChecked(),
+                "refresh_interval": self.refresh_interval_spinbox.value(),
+                "vbox_path": self.vbox_path_edit.text(),
+                "theme": self.theme_combo.currentText(),
+                "dpi_scaling": self.dpi_scaling_combo.currentText()}
 
 
 class AboutDialog(QDialog):
@@ -284,7 +269,7 @@ class AboutDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("About VBoxTabs Manager")
-        self.setFixedSize(400, 250)
+        self.setFixedSize(365, 230)
         # Set proper popup dialog flags - make it modal and non-resizable
         self.setWindowFlags(Qt.Dialog | Qt.MSWindowsFixedSizeDialogHint |
                             Qt.WindowTitleHint | Qt.WindowCloseButtonHint)
@@ -308,11 +293,11 @@ class AboutDialog(QDialog):
         content_layout.addWidget(title_label)
 
         desc_label = QLabel(
-            "A tool for combining VirtualBox windows into a single tabbed window.")
+            "Combining VirtualBox windows into a single tabbed window.")
         desc_label.setAlignment(Qt.AlignCenter)
         content_layout.addWidget(desc_label)
 
-        version_label = QLabel("Version 1.3")
+        version_label = QLabel("Version 1.3.1")
         version_label.setAlignment(Qt.AlignCenter)
         content_layout.addWidget(version_label)
 
@@ -825,47 +810,35 @@ class VirtualBoxTabs(QMainWindow):
 
         # Remove the tab from the UI and internal tracking
         try:
-            # Ensure the tab widget itself exists and index is still valid
-            # (could change during async operations, though unlikely here)
             if self.tab_widget and 0 <= index < self.tab_widget.count() and self.tab_widget.widget(index) == tab:
                 self.tab_widget.removeTab(index)
                 if hwnd in self.tabs:
                     del self.tabs[hwnd]
-                tab.deleteLater()  # Schedule the QWidget for deletion
+                tab.deleteLater()
             else:
                 # Clean up self.tabs just in case
                 if hwnd in self.tabs:
                     del self.tabs[hwnd]
 
-            QMessageBox.information(
-                self, "VMs Closed", "VM window have been forcefully closed.")
+            # QMessageBox.information(
+            #    self, "VMs Closed", "VM window have been forcefully closed.")
         except Exception as e:
             # Attempt cleanup of internal state even if UI removal failed
             if hwnd in self.tabs:
                 del self.tabs[hwnd]
 
     def change_theme(self, theme_name):
-        """Changes application theme"""
-        if theme_name == "QDark" and QDARKSTYLE_AVAILABLE:
-            # Apply QDarkStyle
-            QApplication.instance().setStyleSheet(qdarkstyle.load_stylesheet())
-        elif theme_name in ["Atom One", "Blender", "Catppuccin Frappe", "Catppuccin Latte",
-                            "Catppuccin Macchiato", "Catppuccin Mocha", "Dracula",
-                            "GitHub Dark", "GitHub Light", "Modern Dark", "Modern Light",
-                            "Monokai", "Nord", "One Dark Two"] and QT_THEMES_AVAILABLE:
-            # Apply qt-themes theme
-            QApplication.instance().setStyleSheet("")
+        app_instance = QApplication.instance()
+        if theme_name == "QDark" and QDARKSTYLE_AVAILABLE: app_instance.setStyleSheet(qdarkstyle.load_stylesheet())
+        elif theme_name in self.theme_map and self.theme_map[theme_name] not in ["windows11", "windowsvista", "Windows", "Fusion"] and QT_THEMES_AVAILABLE:
+            app_instance.setStyleSheet("") 
             qt_themes.set_theme(self.theme_map[theme_name])
-        else:
-            # For other themes, first clear any stylesheet
-            QApplication.instance().setStyleSheet("")
-            # Then apply the Qt style
-            QApplication.setStyle(
-                QStyleFactory.create(self.theme_map[theme_name]))
-            # Reset any qt-themes theme by setting empty stylesheet
-            if QT_THEMES_AVAILABLE:
-                # qt_themes doesn't have reset_theme method, use set_theme with empty string
-                QApplication.instance().setStyleSheet("")
+        elif theme_name in self.theme_map: 
+            app_instance.setStyleSheet("") 
+            QApplication.setStyle(QStyleFactory.create(self.theme_map[theme_name]))
+        else: 
+            app_instance.setStyleSheet("")
+            QApplication.setStyle(QStyleFactory.create("Fusion"))
 
     def show_about_dialog(self):
         """Shows about dialog"""
@@ -969,32 +942,70 @@ class VirtualBoxTabs(QMainWindow):
         event.acceptProposedAction()
 
     def close_current_window(self):
-        """Forcefully closes the current VM window, terminates VBoxSVC, and removes its tab"""
-        current_index = self.tab_widget.currentIndex()
-        if current_index >= 0:
-            tab = self.tab_widget.widget(current_index)
-            hwnd = tab.hwnd
+        """Forcefully closes the current VM window and removes its tab."""
+        # Get the index of the currently active tab.
+        index = self.tab_widget.currentIndex()
 
-            # Get the process ID associated with the window
-            _, process_id = win32process.GetWindowThreadProcessId(hwnd)
+        # Check if the index is valid.
+        if not (0 <= index < self.tab_widget.count()):
+            return
 
+        tab = self.tab_widget.widget(index)
+        # Ensure we are dealing with a VBoxTab.
+        if not isinstance(tab, VBoxTab):
             try:
-                # Open the process with termination rights
+                self.tab_widget.removeTab(index)
+                tab.deleteLater()
+            except Exception:
+                pass
+            return
+
+        hwnd = tab.hwnd
+        process_id = None
+
+        # Get the process ID associated with the window.
+        try:
+            if win32gui.IsWindow(hwnd):
+                _, process_id = win32process.GetWindowThreadProcessId(hwnd)
+        except Exception:
+            # If getting PID fails, we can't terminate, but we'll still try to clean up the tab.
+            pass
+
+        # Terminate the process if we found a process ID.
+        if process_id:
+            try:
                 process_handle = win32api.OpenProcess(
                     win32con.PROCESS_TERMINATE, False, process_id)
-                # Terminate the process
-                win32api.TerminateProcess(process_handle, 0)
-                win32api.CloseHandle(process_handle)
-
-                # Remove the tab
-                self.tab_widget.removeTab(current_index)
-                del self.tabs[hwnd]
-
-                QMessageBox.information(
-                    self, "VMs Closed", "VM window have been forcefully closed.")
+                if process_handle:
+                    win32api.TerminateProcess(process_handle, 0)
+                    win32api.CloseHandle(process_handle)
             except Exception as e:
-                QMessageBox.warning(
-                    self, "Error", f"Failed to close VM window: {str(e)}")
+                if win32gui.IsWindow(hwnd):
+                    QMessageBox.warning(
+                        self, "Error", f"Failed to close VM window: {str(e)}")
+                    return
+
+        try:
+            if self.tab_widget and 0 <= index < self.tab_widget.count() and self.tab_widget.widget(index) == tab:
+                self.tab_widget.removeTab(index)
+                if hwnd in self.tabs:
+                    del self.tabs[hwnd]
+                tab.deleteLater()
+            else:
+                # If the tab at the index is no longer the one we started with,
+                # just clean up our internal dictionary.
+                if hwnd in self.tabs:
+                    del self.tabs[hwnd]
+
+            #QMessageBox.information(
+             #   self, "VM Closed", "The VM window has been forcefully closed.")
+
+        except Exception as e:
+            # If removing the tab from the UI fails, at least try to clean up the internal state.
+            if hwnd in self.tabs:
+                del self.tabs[hwnd]
+            QMessageBox.warning(
+                self, "Cleanup Error", f"An error occurred while removing the tab: {str(e)}")
 
     def open_virtualbox_main(self):
         """Opens the main VirtualBox application"""

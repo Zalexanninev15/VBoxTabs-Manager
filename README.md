@@ -52,12 +52,11 @@
 
 ## Roadmap (I will be very glad of your help)
 
-- [ ] Linux support.
-- [ ] View some information about running virtual machines. The information will be collected directly from the VirtualBox console implementation, most likely it will be.
+- [x] Linux support. [v2.0-alpha]
+- [x] / [] View some information about running virtual machines. The information will be collected directly from the VirtualBox console implementation, most likely it will be. [v2.0-alpha]
 - [ ] Support for multiple windows in one tab with different layout.
-- [ ] A tool for selecting any window (not even related to VirtualBox, any at all) and adding it as a tab.
+- [x] A tool for selecting any window (not even related to VirtualBox, any at all) and adding it as a tab. [v2.0-alpha]
 - [ ] Viewing a preview of the selected window when hovering over the tab.
-- [ ] Quickly deattach windows and attach with a simple drag and drop. I don't know how to implement it correctly yet, as there may be problems of accidental attachment and deattachment.
 
 ## Installation and Usage
 

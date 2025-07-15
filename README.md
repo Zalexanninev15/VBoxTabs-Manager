@@ -52,8 +52,8 @@
 
 ## Roadmap (I will be very glad of your help)
 
-- [x] Linux support. [v2.0-alpha]
-- [x] / [] View some information about running virtual machines. The information will be collected directly from the VirtualBox console implementation, most likely it will be. [v2.0-alpha]
+- [x] Linux support.
+- [x] View some information about running virtual machines. The information will be collected directly from the VirtualBox console implementation, most likely it will be.
 - [ ] Support for multiple windows in one tab with different layout.
 - [x] A tool for selecting any window (not even related to VirtualBox, any at all) and adding it as a tab. [v2.0-alpha]
 - [ ] Viewing a preview of the selected window when hovering over the tab.
@@ -72,13 +72,6 @@
 
     ```shell
     pip install -r requirements.txt
-    ```
-
-    🌈 [test] If you want more themes available, you can additionally install *qt-themes*:
-
-    ```shell
-    pip install qt-themes
-    ```
 
 3. Download or clone this repository.
 

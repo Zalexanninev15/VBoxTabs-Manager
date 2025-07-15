@@ -14,6 +14,7 @@ import json
 import platform
 import locale
 import re
+from datetime import datetime
 
 # --- Platform-specific imports ---
 IS_WINDOWS = platform.system() == "Windows"
@@ -37,8 +38,8 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
                                QDialog, QHBoxLayout, QInputDialog, QCheckBox,
                                QStyleFactory, QComboBox, QToolButton, QMenu,
                                QStyle, QTabBar, QSpinBox, QLineEdit, QGridLayout,
-                               QGroupBox, QFileDialog, QTextEdit, QTableWidget,
-                               QTableWidgetItem, QHeaderView)
+                               QGroupBox, QFileDialog, QTableWidget,
+                               QTableWidgetItem, QHeaderView, QFrame)
 from PySide6.QtCore import Qt, QTimer, Signal, QPoint
 from PySide6.QtGui import QFont, QAction, QIcon, QPixmap, QMouseEvent, QPalette
 
@@ -48,13 +49,6 @@ try:
     QDARKSTYLE_AVAILABLE = True
 except ImportError:
     QDARKSTYLE_AVAILABLE = False
-
-# qt-themes (qt-material)
-try:
-    import qt_themes
-    QT_THEMES_AVAILABLE = True
-except ImportError:
-    QT_THEMES_AVAILABLE = False
 
 # --- Helper Functions ---
 def is_windows_light_theme():
@@ -169,7 +163,7 @@ class WindowsWindowManager(AbstractWindowManager):
 
 # --- Application Classes ---
 class SettingsDialog(QDialog):
-    def __init__(self, settings, available_themes, parent=None):
+    def __init__(self, settings, parent=None):
         super().__init__(parent)
         self.settings = settings
         self.setWindowTitle("Settings")
@@ -210,13 +204,20 @@ class SettingsDialog(QDialog):
         display_layout = QGridLayout(display_group)
         theme_label = QLabel("Theme:")
         display_layout.addWidget(theme_label, 0, 0)
+        
         self.theme_combo = QComboBox()
-        self.theme_combo.addItems(available_themes)
+        theme_names = []
+        if IS_WINDOWS and not is_windows_light_theme():
+            theme_names.append("Dark")
+        theme_names.extend(["Light", "Classic", "Fusion"])
+        if QDARKSTYLE_AVAILABLE: theme_names.append("QDark")
+        
+        self.theme_combo.addItems(theme_names)
         current_theme = self.settings.get("theme", "Fusion")
-        if current_theme in available_themes:
+        if current_theme in theme_names:
             self.theme_combo.setCurrentText(current_theme)
         else:
-            self.theme_combo.setCurrentText("Fusion")
+            self.theme_combo.setCurrentText("Fusion" if "Fusion" in theme_names else (theme_names[0] if theme_names else ""))
         display_layout.addWidget(self.theme_combo, 0, 1)
 
         dpi_label = QLabel("DPI Scaling:")
@@ -234,7 +235,7 @@ class SettingsDialog(QDialog):
         self.save_button = QPushButton("Save"); self.save_button.clicked.connect(self.accept); button_layout.addWidget(self.save_button)
         main_layout.addLayout(button_layout)
         
-        self.adjustSize() # Adjust dialog to its optimal size
+        self.adjustSize()
 
     def browse_vbox_path(self):
         path, _ = QFileDialog.getOpenFileName(self, "Select VirtualBox Executable", os.path.dirname(self.vbox_path_edit.text()), "VirtualBox Executable (VirtualBox.exe);;All Executable Files (*.exe)")
@@ -255,7 +256,7 @@ class AboutDialog(QDialog):
         text_layout = QVBoxLayout(); text_layout.setSpacing(5)
         title_label = QLabel("VBoxTabs Manager"); title_font = self.font(); title_font.setPointSize(16); title_font.setBold(True)
         title_label.setFont(title_font); text_layout.addWidget(title_label)
-        version_label = QLabel("Version 2.0-alpha"); text_layout.addWidget(version_label)
+        version_label = QLabel("Version 2.0-beta 1"); text_layout.addWidget(version_label)
         desc_label = QLabel("A tabbed window manager for VirtualBox and more."); text_layout.addWidget(desc_label)
         text_layout.addSpacing(10)
         author_label = QLabel("Copyright (c) 2025 Zalexanninev15"); text_layout.addWidget(author_label)
@@ -340,13 +341,13 @@ class VmInfoDialog(QDialog):
         if not os.path.exists(vbox_manage_path):
             QMessageBox.critical(self, "Error", f"VBoxManage.exe not found.\nExpected at: {vbox_manage_path}"); return
         try:
-            self.table.setRowCount(0) # Clear table before fetching
+            self.table.setRowCount(0)
             result = subprocess.run(
                 [vbox_manage_path, "showvminfo", self.vm_name, "--machinereadable"],
                 capture_output=True, check=True, creationflags=subprocess.CREATE_NO_WINDOW if IS_WINDOWS else 0,
-                encoding=('oem' if IS_WINDOWS else locale.getpreferredencoding(False)), errors='replace'
+                encoding='utf-8', errors='replace'
             )
-            self.table.setSortingEnabled(False) # Disable sorting during population for performance
+            self.table.setSortingEnabled(False)
             for line in result.stdout.splitlines():
                 match = re.match(r'([^=]+)="([^"]*)"', line)
                 if match:
@@ -356,8 +357,11 @@ class VmInfoDialog(QDialog):
                     self.table.setItem(row_position, 0, QTableWidgetItem(key))
                     self.table.setItem(row_position, 1, QTableWidgetItem(value))
             self.table.setSortingEnabled(True)
-        except subprocess.CalledProcessError as e: QMessageBox.critical(self, "Error", f"Error fetching VM info:\n\n{e.stderr}")
-        except Exception as e: QMessageBox.critical(self, "Error", f"An unexpected error occurred:\n\n{str(e)}")
+        except subprocess.CalledProcessError as e:
+            error_output = e.stderr.decode('utf-8', errors='replace') if e.stderr else str(e)
+            QMessageBox.critical(self, "Error", f"Error fetching VM info:\n\n{error_output}")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"An unexpected error occurred:\n\n{str(e)}")
 
 class VBoxTab(QWidget):
     def __init__(self, window_info, window_manager, parent=None):
@@ -397,30 +401,60 @@ class VirtualBoxTabs(QMainWindow):
         self.is_picking_window = False
         self.picker_timer = QTimer(self); self.picker_timer.setInterval(50); self.picker_timer.timeout.connect(self._on_picker_tick)
         
-        self._populate_theme_map()
+        self.theme_map = {
+            "Dark": "windows11",
+            "Light": "windowsvista",
+            "Classic": "Windows",
+            "Fusion": "Fusion",
+            "QDark": "qdarkstyle",
+        }
 
         self.settings_file = self.get_settings_path(); self.settings = self.load_settings()
         self.apply_dpi_scaling(); self.setWindowTitle("VBoxTabs Manager"); self.resize(1280, 800); self.setMinimumSize(640, 480)
         style = QApplication.style(); self.setWindowIcon(style.standardIcon(QStyle.SP_ComputerIcon))
         central_widget = QWidget(); self.setCentralWidget(central_widget); main_layout = QVBoxLayout(central_widget)
         button_layout = QHBoxLayout()
+        
         # Icons
         refresh_icon = style.standardIcon(QStyle.SP_BrowserReload); attach_all_icon = style.standardIcon(QStyle.SP_ArrowUp); detach_icon = style.standardIcon(QStyle.SP_DialogCancelButton);
         picker_icon = style.standardIcon(QStyle.SP_DesktopIcon); rename_icon = style.standardIcon(QStyle.SP_FileDialogNewFolder); vbox_icon = style.standardIcon(QStyle.SP_ComputerIcon);
         close_icon = style.standardIcon(QStyle.SP_DialogResetButton); settings_icon = style.standardIcon(QStyle.SP_FileDialogDetailedView); about_icon = style.standardIcon(QStyle.SP_MessageBoxInformation)
-        info_icon = style.standardIcon(QStyle.SP_MessageBoxInformation)
-        
+        info_icon = style.standardIcon(QStyle.SP_MessageBoxInformation); close_all_icon = style.standardIcon(QStyle.SP_DialogCloseButton);
+        snapshot_icon = style.standardIcon(QStyle.SP_DialogSaveButton); cad_icon = style.standardIcon(QStyle.SP_DialogOkButton); power_icon = style.standardIcon(QStyle.SP_VistaShield)
+
         self.refresh_button = QToolButton(); self.refresh_button.setIcon(refresh_icon); self.refresh_button.setToolTip("Refresh VM list"); self.refresh_button.clicked.connect(self.refresh_tabs); button_layout.addWidget(self.refresh_button)
         self.attach_all_button = QToolButton(); self.attach_all_button.setIcon(attach_all_icon); self.attach_all_button.setToolTip("Attach all available VMs"); self.attach_all_button.clicked.connect(self.refresh_tabs); button_layout.addWidget(self.attach_all_button)
         self.picker_button = QToolButton(); self.picker_button.setIcon(picker_icon); self.picker_button.setToolTip("Attach any window by clicking it"); self.picker_button.clicked.connect(self.start_window_picker); button_layout.addWidget(self.picker_button)
+        
+        separator1 = QFrame(); separator1.setFrameShape(QFrame.VLine); separator1.setFrameShadow(QFrame.Sunken); button_layout.addWidget(separator1)
+
         self.detach_button = QToolButton(); self.detach_button.setIcon(detach_icon); self.detach_button.setToolTip("Detach current VM"); self.detach_button.clicked.connect(self.detach_current_tab); button_layout.addWidget(self.detach_button)
         self.close_window_button = QToolButton(); self.close_window_button.setIcon(close_icon); self.close_window_button.setToolTip("Close current VM window"); self.close_window_button.clicked.connect(self.close_current_window); button_layout.addWidget(self.close_window_button)
+        self.close_all_button = QToolButton(); self.close_all_button.setIcon(close_all_icon); self.close_all_button.setToolTip("Close ALL VM windows"); self.close_all_button.clicked.connect(self.close_all_vms); button_layout.addWidget(self.close_all_button)
+        
+        separator2 = QFrame(); separator2.setFrameShape(QFrame.VLine); separator2.setFrameShadow(QFrame.Sunken); button_layout.addWidget(separator2)
+
         self.rename_button = QToolButton(); self.rename_button.setIcon(rename_icon); self.rename_button.setToolTip("Rename current tab"); self.rename_button.clicked.connect(self.rename_current_tab); button_layout.addWidget(self.rename_button)
         self.info_button = QToolButton(); self.info_button.setIcon(info_icon); self.info_button.setToolTip("Show current VM Information"); self.info_button.clicked.connect(self.show_current_vm_info); button_layout.addWidget(self.info_button)
+        self.snapshot_button = QToolButton(); self.snapshot_button.setIcon(snapshot_icon); self.snapshot_button.setToolTip("Take a snapshot of the current VM"); self.snapshot_button.clicked.connect(self.take_snapshot); button_layout.addWidget(self.snapshot_button)
+        self.cad_button = QToolButton(); self.cad_button.setIcon(cad_icon); self.cad_button.setToolTip("Send Ctrl+Alt+Del to current VM"); self.cad_button.clicked.connect(self.send_ctrl_alt_del); button_layout.addWidget(self.cad_button)
+
+        self.power_button = QToolButton(); self.power_button.setIcon(power_icon); self.power_button.setToolTip("Power options for current VM");
+        power_menu = QMenu(self)
+        power_menu.addAction(style.standardIcon(QStyle.SP_BrowserStop), "Suspend", self.suspend_vm)
+        power_menu.addAction(style.standardIcon(QStyle.SP_DialogYesButton), "Restart", self.restart_vm)
+        power_menu.addAction(style.standardIcon(QStyle.SP_DialogNoButton), "Shutdown", self.shutdown_vm)
+        self.power_button.setMenu(power_menu); self.power_button.setPopupMode(QToolButton.InstantPopup); button_layout.addWidget(self.power_button)
+        
+        separator3 = QFrame(); separator3.setFrameShape(QFrame.VLine); separator3.setFrameShadow(QFrame.Sunken); button_layout.addWidget(separator3)
+        
         self.vbox_main_button = QToolButton(); self.vbox_main_button.setIcon(vbox_icon); self.vbox_main_button.setToolTip("Open VirtualBox main application"); self.vbox_main_button.clicked.connect(self.open_virtualbox_main); button_layout.addWidget(self.vbox_main_button)
+        
         button_layout.addStretch(1)
+        
         self.settings_button = QToolButton(); self.settings_button.setIcon(settings_icon); self.settings_button.setToolTip("Settings"); self.settings_button.clicked.connect(self.show_settings_dialog); button_layout.addWidget(self.settings_button)
         self.about_button = QToolButton(); self.about_button.setIcon(about_icon); self.about_button.setToolTip("About"); self.about_button.clicked.connect(self.show_about_dialog); button_layout.addWidget(self.about_button)
+        
         main_layout.addLayout(button_layout)
 
         self.tab_widget = QTabWidget(); custom_tab_bar = MiddleClickCloseTabBar(self.tab_widget); custom_tab_bar.middleCloseRequested.connect(self.close_tab_by_index)
@@ -430,23 +464,6 @@ class VirtualBoxTabs(QMainWindow):
         self.tab_widget.tabBar().setContextMenuPolicy(Qt.CustomContextMenu); self.tab_widget.tabBar().customContextMenuRequested.connect(self.show_tab_context_menu)
         self.tab_widget.currentChanged.connect(self.update_tool_buttons)
         self.update_tool_buttons(self.tab_widget.currentIndex())
-
-    def _populate_theme_map(self):
-        self.theme_map = {}
-        if IS_WINDOWS:
-            self.theme_map["Dark"] = ('special_dark', 'special_dark')
-            self.theme_map["Light"] = ('qstyle', 'windowsvista')
-        self.theme_map["Fusion"] = ('qstyle', 'Fusion')
-        self.theme_map["Classic"] = ('qstyle', 'Windows')
-        if QDARKSTYLE_AVAILABLE:
-            self.theme_map["QDark"] = ('qdarkstyle', 'qdarkstyle')
-        if QT_THEMES_AVAILABLE:
-            try:
-                for theme_name in qt_themes.list_themes():
-                    display_name = theme_name.replace('_', ' ').title()
-                    self.theme_map[display_name] = ('qtthemes', theme_name)
-            except Exception as e:
-                print(f"Warning: Could not load themes from qt_themes: {e}")
 
     def update_tool_buttons(self, index):
         has_tabs = index != -1
@@ -458,8 +475,13 @@ class VirtualBoxTabs(QMainWindow):
         
         self.detach_button.setEnabled(has_tabs)
         self.close_window_button.setEnabled(has_tabs)
+        self.close_all_button.setEnabled(has_tabs)
         self.rename_button.setEnabled(has_tabs)
+
         self.info_button.setEnabled(is_vbox_tab)
+        self.snapshot_button.setEnabled(is_vbox_tab)
+        self.cad_button.setEnabled(is_vbox_tab)
+        self.power_button.setEnabled(is_vbox_tab)
 
     def get_settings_path(self): return os.path.join(os.path.dirname(sys.executable if getattr(sys, 'frozen', False) else __file__), 'settings.json')
     def load_settings(self):
@@ -480,37 +502,25 @@ class VirtualBoxTabs(QMainWindow):
             try: os.environ['QT_SCALE_FACTOR'] = str(float(scaling.strip('%')) / 100.0)
             except ValueError: os.environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = '1'
     def show_settings_dialog(self):
-        dialog = SettingsDialog(self.settings, sorted(list(self.theme_map.keys())), self)
+        dialog = SettingsDialog(self.settings, self)
         if dialog.exec():
             new = dialog.get_settings(); old = self.settings.copy(); self.settings = new; self.save_settings()
             if new["refresh_interval"] != old.get("refresh_interval"): self.auto_refresh_timer.start(new["refresh_interval"] * 1000)
             if new["theme"] != old.get("theme"): self.change_theme(new["theme"])
             if new["dpi_scaling"] != old.get("dpi_scaling"): QMessageBox.information(self, "Restart Required", "DPI scaling changes will take effect after restarting the application.")
     
-    def change_theme(self, name):
+    def change_theme(self, theme_name):
         app = QApplication.instance()
-        theme_type, internal_name = self.theme_map.get(name, ('qstyle', 'Fusion'))
-
         app.setStyleSheet("")
-        app.setPalette(QPalette()) 
+        app.setPalette(QPalette())
 
-        if theme_type == 'qstyle':
-            QApplication.setStyle(QStyleFactory.create(internal_name))
-        elif theme_type == 'qdarkstyle':
+        theme_key = self.theme_map.get(theme_name)
+        if theme_key == "qdarkstyle" and QDARKSTYLE_AVAILABLE:
             app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyside6'))
-        elif theme_type == 'qtthemes':
-            try:
-                qt_themes.set_theme(internal_name)
-            except Exception as e:
-                print(f"Failed to set qt-theme '{internal_name}': {e}")
-                QApplication.setStyle(QStyleFactory.create('Fusion'))
-        elif theme_type == 'special_dark':
-            if QDARKSTYLE_AVAILABLE:
-                app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyside6'))
-            elif QT_THEMES_AVAILABLE:
-                qt_themes.set_theme('dark_blue')
-            else:
-                QApplication.setStyle(QStyleFactory.create('Fusion'))
+        elif theme_key:
+            QApplication.setStyle(QStyleFactory.create(theme_key))
+        else:
+            QApplication.setStyle(QStyleFactory.create("Fusion"))
 
     def show_about_dialog(self): AboutDialog(self).exec()
     def start_window_picker(self):
@@ -603,6 +613,22 @@ class VirtualBoxTabs(QMainWindow):
         tab_to_detach.deleteLater()
 
     def detach_current_tab(self): self.detach_tab(self.tab_widget.currentIndex())
+    
+    def close_all_vms(self):
+        if self.tab_widget.count() == 0:
+            return
+        
+        reply = QMessageBox.question(self, "Close All VMs",
+                                     "Are you sure you want to forcefully close all VM windows?",
+                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if reply == QMessageBox.No:
+            return
+        
+        # Iterate backwards to safely remove tabs
+        for i in range(self.tab_widget.count() - 1, -1, -1):
+            self.close_tab_by_index(i)
+        
+        QTimer.singleShot(500, self.refresh_tabs)
 
     def close_tab_by_index(self, index):
         if not (0 <= index < self.tab_widget.count()): return
@@ -643,6 +669,14 @@ class VirtualBoxTabs(QMainWindow):
             tab_text = display_name if tab.window_info.get('type') == 'VirtualBox' else f"[{tab.window_info.get('type')}] {display_name}"
             self.tab_widget.setTabText(index, tab_text)
 
+    def _get_current_vm_name(self):
+        index = self.tab_widget.currentIndex()
+        if index < 0: return None, "No tab selected."
+        tab = self.tab_widget.widget(index)
+        if not isinstance(tab, VBoxTab) or tab.window_info.get('type') != 'VirtualBox':
+            return None, "Selected tab is not a VirtualBox VM."
+        return self._get_registered_vm_name(tab.window_info['title'])
+
     def _get_registered_vm_name(self, window_title_part):
         vbox_manage_path = os.path.join(os.path.dirname(self.settings.get("vbox_path", "")), "VBoxManage.exe")
         if not os.path.exists(vbox_manage_path): return None, "VBoxManage.exe not found"
@@ -650,7 +684,7 @@ class VirtualBoxTabs(QMainWindow):
             result = subprocess.run(
                 [vbox_manage_path, "list", "runningvms"],
                 capture_output=True, check=True, creationflags=subprocess.CREATE_NO_WINDOW if IS_WINDOWS else 0,
-                encoding=('oem' if IS_WINDOWS else locale.getpreferredencoding(False)), errors='replace'
+                encoding='utf-8', errors='replace'
             )
             for line in result.stdout.splitlines():
                 match = re.match(r'"([^"]+)"', line)
@@ -660,18 +694,57 @@ class VirtualBoxTabs(QMainWindow):
             return None, f"No running VM found matching '{window_title_part}'"
         except Exception as e: return None, f"Failed to list running VMs: {str(e)}"
 
-    def show_current_vm_info(self):
-        index = self.tab_widget.currentIndex()
-        if index < 0: return
-        tab = self.tab_widget.widget(index)
-        if not isinstance(tab, VBoxTab) or tab.window_info.get('type') != 'VirtualBox':
+    def _run_vboxmanage_command(self, command_args):
+        vm_name, error = self._get_current_vm_name()
+        if error:
+            QMessageBox.warning(self, "Command Error", error)
             return
-            
-        registered_name, error = self._get_registered_vm_name(tab.window_info['title'])
+        
+        vbox_manage_path = os.path.join(os.path.dirname(self.settings.get("vbox_path", "")), "VBoxManage.exe")
+        full_command = [vbox_manage_path] + ["controlvm", vm_name] + command_args
+        
+        try:
+            subprocess.run(full_command, check=True, capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW if IS_WINDOWS else 0)
+        except subprocess.CalledProcessError as e:
+            error_output = e.stderr.decode('utf-8', errors='replace') if e.stderr else str(e)
+            QMessageBox.critical(self, "VBoxManage Error", f"Failed to execute command:\n{' '.join(full_command)}\n\n{error_output}")
+        except Exception as e:
+            QMessageBox.critical(self, "Execution Error", f"An unexpected error occurred:\n\n{str(e)}")
+
+    def take_snapshot(self):
+        vm_name, error = self._get_current_vm_name()
+        if error:
+            QMessageBox.warning(self, "Snapshot Error", error)
+            return
+
+        default_name = f"Snapshot_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+        snap_name, ok = QInputDialog.getText(self, "Take Snapshot", f"Enter snapshot name for '{vm_name}':", text=default_name)
+        
+        if ok and snap_name:
+            vbox_manage_path = os.path.join(os.path.dirname(self.settings.get("vbox_path", "")), "VBoxManage.exe")
+            full_command = [vbox_manage_path, "snapshot", vm_name, "take", snap_name]
+            try:
+                subprocess.run(full_command, check=True, capture_output=True, creationflags=subprocess.CREATE_NO_WINDOW if IS_WINDOWS else 0)
+                QMessageBox.information(self, "Success", f"Snapshot '{snap_name}' created successfully.")
+            except subprocess.CalledProcessError as e:
+                error_output = e.stderr.decode('utf-8', errors='replace') if e.stderr else str(e)
+                QMessageBox.critical(self, "VBoxManage Error", f"Failed to take snapshot:\n\n{error_output}")
+            except Exception as e:
+                 QMessageBox.critical(self, "Execution Error", f"An unexpected error occurred:\n\n{str(e)}")
+
+    def send_ctrl_alt_del(self):
+        self._run_vboxmanage_command(["keyboardputscancode", "1d", "38", "e0", "53", "e0", "d3", "e0", "b8", "e0", "9d"])
+    
+    def suspend_vm(self): self._run_vboxmanage_command(["savestate"])
+    def restart_vm(self): self._run_vboxmanage_command(["reset"])
+    def shutdown_vm(self): self._run_vboxmanage_command(["acpipowerbutton"])
+
+    def show_current_vm_info(self):
+        registered_name, error = self._get_current_vm_name()
         if registered_name:
             VmInfoDialog(registered_name, self.settings, self).exec()
-        else:
-            QMessageBox.warning(self, "VM Info Error", f"Could not get information for this VM.\n\nReason: {error}")
+        #else:
+        #    QMessageBox.warning(self, "VM Info Error", f"Could not get information for this VM.\n\nReason: {error}")
 
     def show_tab_context_menu(self, pos):
         tabBar = self.tab_widget.tabBar(); index = tabBar.tabAt(pos)
@@ -681,30 +754,35 @@ class VirtualBoxTabs(QMainWindow):
         rename_action = menu.addAction(style.standardIcon(QStyle.SP_FileDialogNewFolder), "Rename Tab")
         detach_action = menu.addAction(style.standardIcon(QStyle.SP_DialogCancelButton), "Detach Window")
         close_action = menu.addAction(style.standardIcon(QStyle.SP_DialogResetButton), "Close Window")
+        
+        # Initialize action variables to None
         info_action = None
+        snapshot_action = None
+
         if tab.window_info.get('type') == "VirtualBox":
-            menu.addSeparator(); info_action = menu.addAction(style.standardIcon(QStyle.SP_MessageBoxInformation), "Show VM Info")
+            menu.addSeparator()
+            info_action = menu.addAction(style.standardIcon(QStyle.SP_MessageBoxInformation), "Show VM Info")
+            snapshot_action = menu.addAction(style.standardIcon(QStyle.SP_DialogSaveButton), "Take Snapshot")
         
         action = menu.exec(tabBar.mapToGlobal(pos))
         
         if action == rename_action: self._rename_tab_at_index(index)
         elif action == detach_action: self.detach_tab(index)
         elif action == close_action: self.close_tab_by_index(index)
-        elif action == info_action:
-            self.show_current_vm_info()
+        elif action == info_action: self.show_current_vm_info()
+        elif action == snapshot_action: self.take_snapshot()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     if IS_WINDOWS: window_manager = WindowsWindowManager()
     elif IS_LINUX: window_manager = LinuxWindowManager()
     else: QMessageBox.critical(None, "Unsupported OS", f"This application does not support {platform.system()}."); sys.exit(1)
-    if not QDARKSTYLE_AVAILABLE: print("Warning: qdarkstyle not found. The 'QDark' and 'Dark' themes may be unavailable.")
-    if not QT_THEMES_AVAILABLE: print("Warning: qt-material/qt-themes not found. Some themes are unavailable.")
+    if not QDARKSTYLE_AVAILABLE: print("Warning: qdarkstyle not found. The 'QDark' theme may be unavailable.")
     
     window = VirtualBoxTabs(window_manager)
     window.show()
     
-    # Apply initial theme after window is shown to fix title bar issues
     QTimer.singleShot(50, lambda: window.change_theme(window.settings.get("theme", "Fusion")))
     
     sys.exit(app.exec())

@@ -50,14 +50,6 @@
 - VirtualBox 7.0 or higher (It also works with earlier versions 5 and 6)
 - No dependencies required for the standalone build (see below for running from source)
 
-## Roadmap (I will be very glad of your help)
-
-- [x] Linux support.
-- [x] View some information about running virtual machines. The information will be collected directly from the VirtualBox console implementation, most likely it will be.
-- [ ] Support for multiple windows in one tab with different layout.
-- [x] A tool for selecting any window (not even related to VirtualBox, any at all) and adding it as a tab. [v2.0-alpha]
-- [ ] Viewing a preview of the selected window when hovering over the tab.
-
 ## Installation and Usage
 
 ### 1. Using the Release (Recommended)

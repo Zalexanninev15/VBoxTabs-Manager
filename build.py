@@ -25,7 +25,7 @@ SOURCE_FILE = "VBoxTabs-Manager.py"
 REQUIREMENTS_FILE = "requirements.txt"
 DIST_DIR_ORIGINAL = "VBoxTabs-Manager.dist"
 DIST_DIR_RENAMED = "VBoxTabs Manager"
-ZIP_FILENAME = "VBoxTabs-Manager" # .zip will be added by shutil
+ZIP_FILENAME = "VBoxTabs-Manager"
 
 def check_python_version():
     """Checks if the current Python version is 3.13 or newer."""
@@ -43,7 +43,7 @@ def clean_previous_builds():
         DIST_DIR_RENAMED,
         f"{ZIP_FILENAME}.zip",
         "VBoxTabs-Manager.build", # Nuitka build folder
-        "VBoxTabs Manager.exe"    # Nuitka single-file output
+        "VBoxTabs Manager.exe"    # Nuitka file output
     ]
     for artifact in artifacts:
         if os.path.isfile(artifact):
@@ -75,7 +75,7 @@ def install_dependencies():
 def get_version_from_source():
     """Extracts the version string from the main Python source file."""
     print("\n--- Extracting version from VBoxTabs-Manager.py ---")
-    version_pattern = re.compile(r'version_label\s*=\s*QLabel\("Version ([0-9.]+[a-zA-Z0-9_-]*)"\)')
+    version_pattern = re.compile(r"VERSION\s*=\s*['\"]([^'\"]+)['\"]")
     try:
         with open(SOURCE_FILE, 'r', encoding='utf-8') as f:
             content = f.read()
@@ -110,7 +110,7 @@ def run_nuitka_build(version):
         "--static-libpython=no",
         "--company-name=Zalexanninev15",
         "--product-name=VBoxTabs Manager",
-        f"--file-version={version}",
+        f"--file-version={version.split('-')[0]}",
         "--lto=yes",
         "--show-memory",
         "--show-progress",
@@ -175,7 +175,7 @@ def main():
     print("To create a new release on GitHub:")
     print("1. Go to your repository's 'Releases' page on GitHub.")
     print("2. Click 'Draft a new release'.")
-    print(f"3. Use 'v{version}' as the tag name.")
+    print(f"3. Use 'v{version.strip()}' as the tag name.")
     print(f"4. Use 'Version {version}' as the release title.")
     print("5. Write your release notes (you can copy the latest commit message).")
     print(f"6. Upload the '{ZIP_FILENAME}.zip' file as a release asset.")

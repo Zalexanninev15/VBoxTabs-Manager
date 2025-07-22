@@ -13,6 +13,8 @@
 [![](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![](https://img.shields.io/badge/Donate-FFDD00.svg?logo=buymeacoffee&logoColor=black)](https://z15.neocities.org/donate)
 
+## The project has been [moved to Codeberg and will be further developed there](https://codeberg.org/Zalexanninev15/Vunora).
+
 ## Screenshot
 
 ![VBoxTabs Manager Screenshot](./Screenshot.png)
@@ -49,15 +51,6 @@
 - OS: Windows 10/11
 - VirtualBox 7.0 or higher (It also works with earlier versions 5 and 6)
 - No dependencies required for the standalone build (see below for running from source)
-
-## Roadmap (I will be very glad of your help)
-
-- [ ] Linux support.
-- [ ] View some information about running virtual machines. The information will be collected directly from the VirtualBox console implementation, most likely it will be.
-- [ ] Support for multiple windows in one tab with different layout.
-- [ ] A tool for selecting any window (not even related to VirtualBox, any at all) and adding it as a tab.
-- [ ] Viewing a preview of the selected window when hovering over the tab.
-- [ ] Quickly deattach windows and attach with a simple drag and drop. I don't know how to implement it correctly yet, as there may be problems of accidental attachment and deattachment.
 
 ## Installation and Usage
 
